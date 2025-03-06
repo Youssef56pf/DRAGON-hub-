@@ -1,0 +1,323 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local MainWindow = Rayfield:CreateWindow({
+   Name = "DRAGON hub",
+   Icon = 3,
+   LoadingTitle = "script",
+   LoadingSubtitle = "by Jo H",
+   Theme = "DarkBlue",
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false,
+
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil,
+      FileName = "Dragon Hub"
+   },
+
+   Discord = {
+      Enabled = false,
+      Invite = "discord.gg/7J5cJgpH",
+      RememberJoins = false,
+   },
+
+   KeySystem = true,
+   KeySettings = {
+      Title = "Dragon hub",
+      Subtitle = "Key System",
+      Note = "join discord to get key",
+      FileName = "ggmaster",
+      SaveKey = false,
+      GrabKeyFromSite = false,
+      Key = {"bsfaugah63", "Mohamedsalah1", "yousef310", "yhsg45gs","hamomana"}
+   }
+})
+
+-- Adding tabs
+local InfoTab = MainWindow:CreateTab("Information", 4483362458)
+local HomeTab = MainWindow:CreateTab("🏠Home", 4483362458)
+local FarmTab = MainWindow:CreateTab("Farm", 4483362458)  -- إضافة التبويب الجديد
+
+-- Add Discord Join Button as the first button in the Information tab
+local DiscordButton = InfoTab:CreateButton({
+   Name = "Join Discord!",
+   Callback = function()
+      local discordLink = "https://discord.gg/7J5cJgpH"
+      if setclipboard then
+         setclipboard(discordLink)
+         Rayfield:Notify({
+            Title = "Link Copied!",
+            Content = "Discord link has been copied successfully: " .. discordLink,
+            Duration = 5,
+            Image = "check",
+         })
+      else
+         Rayfield:Notify({
+            Title = "Error!",
+            Content = "Failed to copy the link. Please make sure your executor supports it.",
+            Duration = 5,
+            Image = "error",
+         })
+      end
+   end,
+})
+
+-- Get Map Name using PlaceId
+local function getMapName()
+    local placeId = game.PlaceId
+    local success, mapName = pcall(function()
+        return game:GetService("MarketplaceService"):GetProductInfo(placeId).Name
+    end)
+
+    if success and mapName then
+        return mapName
+    else
+        return "Unknown Map"
+    end
+end
+
+-- Adding the map name label
+local MapNameLabel = InfoTab:CreateLabel("Current Map: " .. getMapName())
+
+local InfoSection = InfoTab:CreateSection("Player Info")
+
+local player = game.Players.LocalPlayer
+local playerDisplayName = player.DisplayName
+local playerUserId = player.UserId
+local serverAddress = game.JobId ~= "" and game.JobId or "Unknown"
+local executorName = identifyexecutor and identifyexecutor() or "Unknown Executor"
+
+InfoTab:CreateLabel("Display Name: " .. playerDisplayName)
+InfoTab:CreateLabel("User ID: " .. playerUserId)
+InfoTab:CreateLabel("Server Address: " .. serverAddress)
+InfoTab:CreateLabel("Executor: " .. executorName)
+
+
+-- Add WalkSpeed and Dash Length sliders in Home Tab
+local WalkSpeedValue = 16  -- Default WalkSpeed value
+local DashLengthValue = 10  -- Default Dash Length value
+
+local WalkSpeedSlider = HomeTab:CreateSlider({
+   Name = "Run Speed",
+   Range = {1, 100},
+   Increment = 1,
+   Suffix = "Speed",
+   CurrentValue = WalkSpeedValue, 
+   Flag = "WalkSpeedSlider", 
+   Callback = function(Value)
+     WalkSpeedValue = Value
+   end,
+})
+
+local WalkSpeedButton = HomeTab:CreateButton({
+   Name = "Set Run Speed",
+   Callback = function()
+     game.Players.LocalPlayer.Character:SetAttribute("SpeedMultiplier", WalkSpeedValue)  -- Set SpeedMultiplier for running speed
+     Rayfield:Notify({
+        Title = "Run Speed Set!",
+        Content = "Run speed has been set to: " .. WalkSpeedValue,
+        Duration = 5,
+        Image = "check",
+     })
+   end,
+})
+
+local DashLengthSlider = HomeTab:CreateSlider({
+   Name = "Dash Length",
+   Range = {10, 1000},
+   Increment = 1,
+   Suffix = "Length",
+   CurrentValue = DashLengthValue,  
+   Flag = "DashLengthSlider", 
+   Callback = function(Value)
+     DashLengthValue = Value
+   end,
+})
+
+local DashLengthButton = HomeTab:CreateButton({
+   Name = "Set Dash Length",
+   Callback = function()
+     game.Players.LocalPlayer.Character:SetAttribute("DashLength", DashLengthValue)
+     Rayfield:Notify({
+        Title = "Dash Length Set!",
+        Content = "Dash length has been set to: " .. DashLengthValue,
+        Duration = 5,
+        Image = "check",
+     })
+   end,
+})
+
+-- Infinite Jump Function in Home tab
+_G.infiniteJump = false
+
+local FlyButton = HomeTab:CreateButton({
+   Name = "Toggle Infinite Jump",
+   Callback = function()
+      local player = game.Players.LocalPlayer
+      local character = player.Character or player.CharacterAdded:Wait()
+      local humanoid = character:FindFirstChild("Humanoid")
+
+      if not humanoid then
+         Rayfield:Notify({
+            Title = "Error!",
+            Content = "Unable to find Humanoid.",
+            Duration = 5,
+            Image = "error",
+         })
+         return
+      end
+
+      if not _G.infiniteJump then
+         _G.infiniteJump = true
+
+         Rayfield:Notify({
+            Title = "Infinite Jump Activated!",
+            Content = "You can now jump infinitely.",
+            Duration = 5,
+            Image = "check",
+         })
+
+         -- Enable Infinite Jump
+         game:GetService("UserInputService").JumpRequest:Connect(function()
+            if _G.infiniteJump then
+               humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+         end)
+
+         FlyButton:SetText("Disable Infinite Jump")
+      else
+         _G.infiniteJump = false
+         Rayfield:Notify({
+            Title = "Infinite Jump Disabled!",
+            Content = "You can no longer jump infinitely.",
+            Duration = 5,
+            Image = "check",
+         })
+
+         FlyButton:SetText("Toggle Infinite Jump")
+      end
+   end,
+})
+
+-- Farm Chest Toggle in the Farm Tab
+local isFarming = false  -- متغير لتحديد ما إذا كان السكربت يعمل أم لا
+
+local FarmChestToggle = FarmTab:CreateToggle({
+    Name = "Farm Chest",
+    CurrentValue = false,
+    Callback = function(Value)
+        isFarming = Value  -- تحديث حالة التفعيل
+        if isFarming then
+            -- تفعيل جمع الصناديق
+            Rayfield:Notify({
+                Title = "Farm Chest Enabled",
+                Content = "The player will start collecting chests.",
+                Duration = 5,
+                Image = "check",
+            })
+
+            -- السكربت الخاص بجمع الصناديق
+            local MaxSpeed = 300
+            local LocalPlayer = game:GetService("Players").LocalPlayer
+            local Locations = workspace._WorldOrigin.Locations
+
+            local function getCharacter()
+                if not LocalPlayer.Character then
+                    LocalPlayer.CharacterAdded:Wait()
+                end
+                LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+                return LocalPlayer.Character
+            end
+
+            local function DistanceFromPlrSort(ObjectList)
+                local RootPart = getCharacter().LowerTorso
+                table.sort(ObjectList, function(ChestA, ChestB)
+                    local RootPos = RootPart.Position
+                    local DistanceA = (RootPos - ChestA.Position).Magnitude
+                    local DistanceB = (RootPos - ChestB.Position).Magnitude
+                    return DistanceA < DistanceB
+                end)
+            end
+
+            local UncheckedChests = {}
+            local FirstRun = true
+
+            local function getChestsSorted()
+                if FirstRun then
+                    FirstRun = false
+                    local Objects = game:GetDescendants()
+                    for i, Object in pairs(Objects) do
+                        if Object.Name:find("Chest") and Object.ClassName == "Part" then
+                            table.insert(UncheckedChests, Object)
+                        end
+                    end
+                end
+                local Chests = {}
+                for i, Chest in pairs(UncheckedChests) do
+                    if Chest:FindFirstChild("TouchInterest") then
+                        table.insert(Chests, Chest)
+                    end
+                end
+                DistanceFromPlrSort(Chests)
+                return Chests
+            end
+
+            local function toggleNoclip(Toggle)
+                for i, v in pairs(getCharacter():GetChildren()) do
+                    if v.ClassName == "Part" then
+                        v.CanCollide = not Toggle
+                    end
+                end
+            end
+
+            local function Teleport(Goal, Speed)
+                if not Speed then
+                    Speed = MaxSpeed
+                end
+                toggleNoclip(true)
+                local RootPart = getCharacter().HumanoidRootPart
+                local Magnitude = (RootPart.Position - Goal.Position).Magnitude
+
+                RootPart.CFrame = RootPart.CFrame
+
+                while not (Magnitude < 1) and isFarming do
+                    local Direction = (Goal.Position - RootPart.Position).unit
+                    RootPart.CFrame = RootPart.CFrame + Direction * (Speed * task.wait())
+                    Magnitude = (RootPart.Position - Goal.Position).Magnitude
+                end
+                toggleNoclip(false)
+            end
+
+            local function main()
+                while task.wait() and isFarming do
+                    local Chests = getChestsSorted()
+                    if #Chests > 0 then
+                        Teleport(Chests[1].CFrame)
+                    else
+                        -- يمكنك إضافة وظيفة "Server Hop" هنا
+                    end
+                end
+            end
+
+            task.wait()
+            main()
+        else
+            -- إيقاف جمع الصناديق
+            Rayfield:Notify({
+                Title = "Farm Chest Disabled",
+                Content = "The player has stopped collecting chests.",
+                Duration = 5,
+                Image = "check",
+            })
+        end
+    end,
+})
+
+Rayfield:Notify({
+   Title = "Script Loaded",
+   Content = "Successful key check ✅",
+   Duration = 5,
+   Image = "rewind",
+})
+
+-- Start
